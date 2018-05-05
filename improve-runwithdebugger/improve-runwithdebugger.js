@@ -1,9 +1,8 @@
-function runWithDebugger(callback, args) {	
+function runWithDebugger(callback, args) {
+	debugger;	
 	if (arguments.length === 1) {
-		debugger;
 		return callback();
 	} else if (Array.isArray(args)) {
-		debugger;
 		return callback.apply(this, args);
 	}
 	throw new Error('Invalid argument: \'' + args + '\'. Must be an array.'); 
