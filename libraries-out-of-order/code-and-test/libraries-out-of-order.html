@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title></title>
+		<script src="../tinytest.js"></script>
+		<script src="../libraries-out-of-order.js"></script>
+		<script>
+
+		tests({
+
+		  'It should save libraries with and without dependencies': function() {
+		  	librarySystem('name', [], function() {
+			  return 'Gordon';
+			});
+
+			librarySystem('greeting', ['name'], function(name) {
+				return 'Hi, my name is ' + name;
+			});
+		    eq(librarySystem('greeting'), 'Hi, my name is Gordon');
+		  },
+
+		  'It should retrieve libraries when only one argument is passed': function() {
+		  	librarySystem('company', [], function() {
+			  return 'Watch and Code';
+			});
+		    eq(librarySystem('company'), 'Watch and Code');
+		  },
+
+		  'It should pass dependencies to the library that needs them': function() {
+		  	librarySystem('name', [], function() {
+			  return 'Gordon';
+			});
+
+			librarySystem('company', [], function() {
+			  return 'Watch and Code';
+			});
+
+			librarySystem('workBlurb', ['name', 'company'], function(name, company) {
+			  return name + ' works at ' + company;
+			});
+
+			eq(librarySystem('workBlurb'), 'Gordon works at Watch and Code');
+		  },
+
+		  'It should allow libraries to be added in any possible order': function() {
+		  	librarySystem('food', [], function() {
+			  return 'Bread';
+			});
+
+			librarySystem('foodBlurb', ['food', 'condiment'], function(food, condiment) {
+			  return food + ' is best with ' + condiment;
+			});
+
+			librarySystem('condiment', [], function() {
+			  return 'butter';
+			});
+
+			eq(librarySystem('foodBlurb'), 'Bread is best with butter');
+		  },
+
+		  'It should run library callbacks only once': function() {
+		  	var howManyTimesRun = 0;
+		  	librarySystem('food', [], function() {
+		  	  howManyTimesRun++;	
+			  return 'Bread';
+			});
+
+			librarySystem('food');
+			librarySystem('food');
+			librarySystem('food');
+			librarySystem('food');
+
+			eq(howManyTimesRun, 1);
+		  }
+
+		});
+
+		</script>
+	</head>
+	<body></body>
+</html>
