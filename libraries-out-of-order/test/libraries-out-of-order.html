@@ -16,6 +16,7 @@
 			librarySystem('greeting', ['name'], function(name) {
 				return 'Hi, my name is ' + name;
 			});
+
 		    eq(librarySystem('greeting'), 'Hi, my name is Gordon');
 		  },
 
@@ -23,6 +24,7 @@
 		  	librarySystem('company', [], function() {
 			  return 'Watch and Code';
 			});
+			
 		    eq(librarySystem('company'), 'Watch and Code');
 		  },
 
