@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title></title>
+		<script src="../tinytest.js"></script>
+		<script src="../isPrototypeOf.js"></script>
+		<script>
+
+		function isPrototypeOf(prototype, obj) {
+
+			if (prototype === Object.getPrototypeOf(obj)) {
+				return true;
+			} else if (Object.getPrototypeOf(prototype) === null) {
+				return false;
+			}
+
+			isPrototypeOf(prototype, Object.getPrototypeOf(obj));
+		}
+
+		tests({
+
+		  'It should ': function() {
+
+		  }
+
+		});
+
+		</script>
+	</head>
+	<body></body>
+</html>
