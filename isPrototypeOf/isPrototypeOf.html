@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title></title>
+		<script src="tinytest.js"></script>
+		<script>
+
+		// The code
+			
+		function isPrototypeOf(prototype, obj) {
+
+			if ( Object.getPrototypeOf(obj) === prototype) {
+				return true;
+			} else if (Object.getPrototypeOf(obj) === null) {
+				return false;
+			}
+
+			return isPrototypeOf(prototype, Object.getPrototypeOf(obj));
+		}
+
+		// Objects to test
+
+		var canine = {
+		  bark: function() {
+		    console.log('bark');
+		  }
+		};
+
+		var dog = Object.create(canine);
+		dog.fetch = function() {
+		  console.log('fetch');
+		};
+
+		var myDog = Object.create(dog);
+		var empty = Object.create(null);
+		var unrelated = {};
+
+		// Tests
+
+		tests({
+
+	    	'It should return true if the prototype is equal to the obj __proto__': function() {
+	    		eq(true, isPrototypeOf(canine, dog));
+	    	},
+
+	    	'It should return false if the prototype is NOT equal to the obj __proto__': function() {
+	    		eq(false, isPrototypeOf(dog, canine));
+	    	},
+
+	    	'It should return true if the prototype is equal to any __proto__ along the obj prototype chain': function() {
+	    		eq(true, isPrototypeOf(canine, myDog));
+	    	},
+
+	    	'It should return false if the prototype is NOT equal to any __proto__ along the obj prototype chain': function() {
+	    		eq(false, isPrototypeOf(unrelated, myDog));
+	    	},
+
+	    	'It should return true for an obj if prototype is equal to Object.prototype (and obj __proto__ is NOT set to null)': function() {
+	    		eq(true, isPrototypeOf(Object.prototype, myDog));
+	    	},
+
+	    	'It should return false if the obj __proto__ is set to null': function() {
+	    		eq(false, isPrototypeOf(dog, empty));
+	    	}
+
+		});
+
+		</script>
+	</head>
+	<body></body>
+</html>
