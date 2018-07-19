@@ -7,15 +7,60 @@
 
 		// The code
 			
-		
+		function toFixed(value, precision) {
+
+			/***
+			*
+			* 1. Convert number to string if not already
+			* 2. Save whether it is negative or not
+			* 3. Save whether it is whole or not
+			* 4. Save value stripped of everything but digitals and decimal
+			*
+			***/
+
+			var stringValue = "" + value,
+			    isNegative = stringValue.indexOf('-') !== -1,
+			    isWhole = stringValue.indexOf('.') === -1,
+			    rawValue = stringValue.replace(/[^0-9.]/g, '');
+
+			// If number is already whole    
+			if (isWhole && precision > 0) {
+				var zerosToAdd = '';
+
+				for (var i = 0; i < precision; i++) {
+					zerosToAdd += '0';
+				};
+
+				rawValue = rawValue + '.' + zerosToAdd;
+			}
+
+
+
+
+
+			// Return result adding minus sign as necessary
+			var result = isNegative ? "-" + rawValue : rawValue;
+
+			return result;
+		}
 
 		// Tests
 
 		tests({
 
-	    	'It should do something': function() {
-	    		eq();
+	    	'It should return the number as a string': function() {
+	    		eq(typeof toFixed(52.75, 2), 'string');
 	    	},
+
+	    	'It should retain minus signs in negative numbers': function() {
+	    		eq(toFixed(-32.25), '-32.25');
+	    	},
+
+	    	'It should add a decimal and respective number of zeros if value is whole number and precision > 0': function() {
+	    		eq(toFixed(100, 2), '100.00');
+	    		eq(toFixed(-25439, 8), '-25439.00000000');
+	    		eq(toFixed(25439, 0), '25439');
+	    	}
 
 		});
 
