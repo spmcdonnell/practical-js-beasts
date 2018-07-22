@@ -22,9 +22,7 @@
 		}
 		
 		// API	
-		function toFixed(value, precision) {
-
-			
+		function toFixed(value, precision) {		
 			var	value = "" + value,
 				rawValue = value.replace(/[^0-9.]/g, ''),
 			    isNegative = value.indexOf('-') !== -1,
@@ -68,38 +66,70 @@
 			// Cases 5, 6, 7, 8
 			if (!isWhole && numbersAfterDecimal.length > precision) {
 				// Case 5
-				if (numbersAfterDecimal[precision] <= 4) {
+				if (parseInt(numbersAfterDecimal[precision]) <= 4) {
 					if (precision === 0) {
 						rawValue = numbersBeforeDecimal;
 					} else {
 						rawValue = numbersBeforeDecimal + '.' + numbersAfterDecimal.slice(0, precision);
 					}
 				} else {
-					var fullValue = (numbersBeforeDecimal + numbersAfterDecimal)
-									.split(/(?=[\s\S])/u)
-									.reverse()
-									.splice(1);
+					var numbersBeforeDecimalArray = numbersBeforeDecimal.split(/(?=[\s\S])/u),
+						numbersAfterDecimalArray  =	numbersAfterDecimal.split(/(?=[\s\S])/u);
+
+						numbersAfterDecimalArray.splice(precision);
+														
+					var fullValue = numbersBeforeDecimalArray.concat(numbersAfterDecimalArray).reverse();
 
 					var newValue = [];
 
-					fullValue.forEach(function(item, index, array) {
-						if (parseInt(item) < 9) {
-							if (index === 0) {
-								newValue.push("" + (parseInt(item) + 1));
+					if (parseInt(fullValue[0]) < 9) {
+						fullValue.forEach(function(item, index, array) {
+							if (parseInt(item) < 9) {
+								if (index === 0) {
+									newValue.push("" + (parseInt(item) + 1));
+								} else {
+									newValue.push(item);
+								}
 							} else {
 								newValue.push(item);
 							}
-						} else {
+						});
+					} else {
+
+						fullValue.forEach(function(item, index, array) {
 							if (index === 0) {
 								newValue.push("0");
+							} else if (newValue[index - 1] === "0") {
+								if (newValue[index - 1] !== fullValue[index - 1]) {
+									if (item === "9") {
+										newValue.push("0");
+									} else {
+										newValue.push("" + (parseInt(item) + 1));
+									}
+								} else {
+									newValue.push(item);
+								}
 							} else {
 								newValue.push(item);
-							}
+							}	
+						});
+					}
+
+					
+						function allZeros(number) {
+							return number === "0";
 						}
-					});
-									
-					console.log(newValue);				
-				}
+
+						if (newValue.every(allZeros)) {
+							newValue.push("1");
+						} 
+
+						if (precision !== 0) {
+							newValue.splice(precision, 0, '.');
+						}	
+
+						return newValue = newValue.reverse().join("");
+				} 
 
 				// Case 6
 
@@ -215,6 +245,10 @@
 				</ul>
 			</li>
 		</ol>
+		<div style="border: 1px solid #666; padding: 20px; width: 45%;">
+			<h2 style="margin: 0;">Scratch Pad</h2>
+			<p>Ex: 76</p>
+		</div>
 	</body>
 	<style type="text/css">
 		body {
