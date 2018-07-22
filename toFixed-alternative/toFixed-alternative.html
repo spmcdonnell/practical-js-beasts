@@ -115,7 +115,7 @@
 						});
 					}
 
-					
+
 						function allZeros(number) {
 							return number === "0";
 						}
@@ -128,7 +128,9 @@
 							newValue.splice(precision, 0, '.');
 						}	
 
-						return newValue = newValue.reverse().join("");
+						newValue = newValue.reverse().join("");
+
+						return isNegative ? "-" + newValue : newValue;
 				} 
 
 				// Case 6
