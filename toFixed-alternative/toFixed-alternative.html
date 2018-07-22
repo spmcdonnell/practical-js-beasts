@@ -2,28 +2,48 @@
 <html>
 	<head>
 		<title>toFixed Alternative</title>
+		<link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700,800" rel="stylesheet">
 		<script src="tinytest.js"></script>
 		<script>
 
 		// The code
-			
+
+		// Helpers
+		function numbersToLeftOfDecimal(value) {
+			value = value.split('.');
+
+			return value[0];
+		}
+
+		function numbersToRightOfDecimal(value) {
+			value = value.split('.');
+
+			return value[1];
+		}
+		
+		// API	
 		function toFixed(value, precision) {
 
-			/***
-			*
-			* 1. Convert number to string if not already
-			* 2. Save whether it is negative or not
-			* 3. Save whether it is whole or not
-			* 4. Save value stripped of everything but digitals and decimal
-			*
-			***/
+			
+			var	value = "" + value,
+				rawValue = value.replace(/[^0-9.]/g, ''),
+			    isNegative = value.indexOf('-') !== -1,
+			    isWhole = value.indexOf('.') === -1;
+			    
+		    var numbersBeforeDecimal = !isWhole ? numbersToLeftOfDecimal(rawValue) : null,
+		    	numbersAfterDecimal = !isWhole ? numbersToRightOfDecimal(rawValue) : null;
 
-			var stringValue = "" + value,
-			    isNegative = stringValue.indexOf('-') !== -1,
-			    isWhole = stringValue.indexOf('.') === -1,
-			    rawValue = stringValue.replace(/[^0-9.]/g, '');
+			// Case 1    
+			if (precision === undefined) {
+				return isNegative ? "-" + rawValue : rawValue;
+			}
 
-			// If number is already whole    
+			// Case 2
+			if (!isWhole && numbersAfterDecimal.length === precision) {
+				return isNegative ? "-" + rawValue : rawValue;
+			}
+			
+			// Case 3    
 			if (isWhole && precision > 0) {
 				var zerosToAdd = '';
 
@@ -34,14 +54,59 @@
 				rawValue = rawValue + '.' + zerosToAdd;
 			}
 
+			// Case 4 
+			if (!isWhole && numbersAfterDecimal.length < precision) {
+				var zerosToAdd = '';
 
+				for (var i = 0; i < (precision - numbersAfterDecimal.length); i++) {
+					zerosToAdd += '0';
+				};
 
+				rawValue = rawValue + zerosToAdd;
+			}
 
+			// Cases 5, 6, 7, 8
+			if (!isWhole && numbersAfterDecimal.length > precision) {
+				// Case 5
+				if (numbersAfterDecimal[precision] <= 4) {
+					if (precision === 0) {
+						rawValue = numbersBeforeDecimal;
+					} else {
+						rawValue = numbersBeforeDecimal + '.' + numbersAfterDecimal.slice(0, precision);
+					}
+				} else {
+					var fullValue = (numbersBeforeDecimal + numbersAfterDecimal)
+									.split(/(?=[\s\S])/u)
+									.reverse()
+									.splice(1);
+
+					var newValue = [];
+
+					fullValue.forEach(function(item, index, array) {
+						if (parseInt(item) < 9) {
+							if (index === 0) {
+								newValue.push("" + (parseInt(item) + 1));
+							} else {
+								newValue.push(item);
+							}
+						} else {
+							if (index === 0) {
+								newValue.push("0");
+							} else {
+								newValue.push(item);
+							}
+						}
+					});
+									
+					console.log(newValue);				
+				}
+
+				// Case 6
+
+			}
 
 			// Return result adding minus sign as necessary
-			var result = isNegative ? "-" + rawValue : rawValue;
-
-			return result;
+			return isNegative ? "-" + rawValue : rawValue;
 		}
 
 		// Tests
@@ -56,6 +121,17 @@
 	    		eq(toFixed(-32.25), '-32.25');
 	    	},
 
+	    	'It should return the value unchaged if precision is undefined or precison is the same as inital values precision': function() {
+	    		eq(toFixed(-32.25), '-32.25');
+	    		eq(toFixed(-32.25, 2), '-32.25');
+	    	},
+
+	    	'It should add a decimal and respective number of zeros if value is whole number and precision > 0': function() {
+	    		eq(toFixed(100, 2), '100.00');
+	    		eq(toFixed(-25439, 8), '-25439.00000000');
+	    		eq(toFixed(25439, 0), '25439');
+	    	},
+
 	    	'It should add a decimal and respective number of zeros if value is whole number and precision > 0': function() {
 	    		eq(toFixed(100, 2), '100.00');
 	    		eq(toFixed(-25439, 8), '-25439.00000000');
@@ -64,7 +140,114 @@
 
 		});
 
+		99.990
+
 		</script>
 	</head>
-	<body></body>
+	<body>
+		<h2>Possible cases listed from easiest to hardest:</h2>
+		<p style="font-size: 0.9em;">/****<br>NOTE: Words preceeded by '$' denote function parameters in code<br>****/</p>
+		<ol class="main">
+			<li>
+				<p><strong>$precision</strong> is not defined:</p>
+				<ul>
+					<li><strong>Solution:</strong> Return <strong>$value</strong> unchanged.</li>
+					<li><strong>Implementation:</strong></li>
+				</ul>
+			</li>
+
+			<li>
+				<p><strong>$precision</strong> is exactly equal to intital <strong>$value</strong> precision:</p>
+				<ul>
+					<li><strong>Solution:</strong> Return <strong>$value</strong> unchanged.</li>
+					<li><strong>Implementation:</strong></li>
+				</ul>
+			</li>	
+
+			<li>
+				<p><strong>$value</strong> is already whole:</p>
+				<ul>
+					<li><strong>Solution:</strong> add decimal and <strong>$precision</strong> number of zeros to end of <strong>$value</strong></li>
+					<li><strong>Implementation:</strong></li>
+						<ul>
+							<li>Build a string of zeros by looping through <strong>$precision</strong> number of times, adding a zero each loop.</li>
+							<li>Attach a '.' and the string of zeros to end of <strong>$value</strong>.</li>
+						</ul>
+				</ul>
+			</li>	
+
+			<li>
+				<p><strong>$value</strong> is not whole, but <strong>$precision</strong> is greater than the number of numbers to the right of decimal (i.e. actual precision):</p>
+				<ul>
+					<li><strong>Solution:</strong> Add (<strong>$precision</strong> - actual precision) number of zeros to the end of <strong>$value</strong>.</li>
+					<li><strong>Implementation:</strong></li>
+				</ul>
+			</li>
+
+			<li>
+				<p><strong>$precision</strong> is less than the number of numbers to the right of decimal (i.e. intital <strong>$value</strong> precision), and the number that is (<strong>$precision</strong> + 1) spaces to the right of the decimal is <= 4:</p>
+				<ul>
+					<li><strong>Solution:</strong> Simply remove all numbers that are (<strong>$precision</strong> + 1 or more) spaces to the right of the decimal.</li>
+					<li><strong>Implementation:</strong></li>
+				</ul>
+			</li>
+	
+			<li>
+				<p><strong>$value</strong> must be rounded up to achieve desired precision. The number that is <strong>$precision</strong> number of spaces to the right of the decimal is 9, and the number that is (<strong>$precision</strong> + 1) spaces to the right of the decimal is >= 5:</p>	
+				<ul>
+					<li><strong>Solution:</strong> In addition to applying the correct precision, the 9 becomes a zero and the number that is (<strong>$precision</strong> - 1) spaces to the right of the decimal is incremented by 1.</li>
+					<li><strong>Implementation:</strong></li>
+				</ul>
+			</li>
+
+			<li>
+				<p>The same scenario as #6, but the number at the <strong>$precision</strong> - 1 space is also a 9 (or the number at number at the <strong>$precision</strong> - 1 space and number at the <strong>$precision</strong> - 2 space are 9's, and so forth and so on).</p>	
+				<ul>
+					<li><strong>Solution:</strong> In addition to applying the correct precision, the 9 becomes a zero and the number that is (<strong>$precision</strong> - 1) spaces to the right of the decimal is incremented by 1.</li>
+					<li><strong>Implementation:</strong></li>
+				</ul>
+			</li>
+			<li>
+				<p>The same scenario as #7, except going from right to left through the number, everything is a 9 including the very first number.</p>	
+				<ul>
+					<li><strong>Solution:</strong> The solution to #5 applies here, but in addition a 1 will be added to the front of the number. (i.e. 99.999 with a <strong>$precision</strong> of 2 yields 100.00).</li>
+					<li><strong>Implementation:</strong></li>
+				</ul>
+			</li>
+		</ol>
+	</body>
+	<style type="text/css">
+		body {
+			font-family: 'Open Sans';
+		}
+		ul {
+			margin-bottom: 40px;
+		}
+
+		li {
+			margin-bottom: 10px;
+		}
+
+		p {
+			margin-top: 0;
+		}
+
+		h2 {
+			margin-bottom: 0;
+		}
+
+		strong {
+			font-weight: 900;
+			font-size: 1.1em;
+		}
+
+		ol.main {
+			max-width: 45%;
+		}
+
+		ol.main > li p {
+			font-weight: 700;
+			margin-bottom: 20px;
+		} 
+	</style>
 </html>
