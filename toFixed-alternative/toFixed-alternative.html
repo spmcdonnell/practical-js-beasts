@@ -26,10 +26,10 @@
 
 			// API
 			function toFixed(value, precision) {
-				var value  								 = '' + value,
-						absValue 							 = value.replace(/[^0-9.]/g, ''),
-						isNegative        		 = value.indexOf('-') !== -1,
-				    isWhole           		 = value.indexOf('.') === -1;
+				var value = '' + value,
+						absValue = value.replace(/[^0-9.]/g, ''),
+						isNegative = value.indexOf('-') !== -1,
+				    isWhole = value.indexOf('.') === -1;
 
 				// Return unaltered value if precision is undefined
 				if (arguments.length < 2) {
@@ -47,11 +47,11 @@
 
 				// Numbers with decimals
 				if(!isWhole) {
-					var numsBeforeDecimal 		 = absValue.split('.')[0],
-							numsAfterDecimal  		 = absValue.split('.')[1],
-							numsAfterDecimalCount  = numsAfterDecimal.length,
+					var numsBeforeDecimal = absValue.split('.')[0],
+							numsAfterDecimal = absValue.split('.')[1],
+							numsAfterDecimalCount = numsAfterDecimal.length,
 							numsBeforeDecimalArray = numsBeforeDecimal.split(/(?=[\s\S])/u),
-						  numsAfterDecimalArray  = numsAfterDecimal.split(/(?=[\s\S])/u);
+						  numsAfterDecimalArray = numsAfterDecimal.split(/(?=[\s\S])/u);
 
 					// Return unaltered value if precision is already the same as initial value's precision
 					if (precision === numsAfterDecimalCount) {
