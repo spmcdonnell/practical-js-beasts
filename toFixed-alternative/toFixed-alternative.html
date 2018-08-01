@@ -5,285 +5,167 @@
 		<link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700,800" rel="stylesheet">
 		<script src="tinytest.js"></script>
 		<script>
-
-		// The code
-
-		// Helpers
-		function numbersToLeftOfDecimal(value) {
-			value = value.split('.');
-
-			return value[0];
-		}
-
-		function numbersToRightOfDecimal(value) {
-			value = value.split('.');
-
-			return value[1];
-		}
-		
-		// API	
-		function toFixed(value, precision) {		
-			var	value = "" + value,
-				rawValue = value.replace(/[^0-9.]/g, ''),
-			    isNegative = value.indexOf('-') !== -1,
-			    isWhole = value.indexOf('.') === -1;
-			    
-		    var numbersBeforeDecimal = !isWhole ? numbersToLeftOfDecimal(rawValue) : null,
-		    	numbersAfterDecimal = !isWhole ? numbersToRightOfDecimal(rawValue) : null;
-
-			// Case 1    
-			if (precision === undefined) {
-				return isNegative ? "-" + rawValue : rawValue;
-			}
-
-			// Case 2
-			if (!isWhole && numbersAfterDecimal.length === precision) {
-				return isNegative ? "-" + rawValue : rawValue;
-			}
-			
-			// Case 3    
-			if (isWhole && precision > 0) {
+			// Helpers
+			function generateZeros(thing) {
 				var zerosToAdd = '';
 
-				for (var i = 0; i < precision; i++) {
+				for (var i = 0; i < thing; i++) {
 					zerosToAdd += '0';
 				};
 
-				rawValue = rawValue + '.' + zerosToAdd;
+				return zerosToAdd;
 			}
 
-			// Case 4 
-			if (!isWhole && numbersAfterDecimal.length < precision) {
-				var zerosToAdd = '';
-
-				for (var i = 0; i < (precision - numbersAfterDecimal.length); i++) {
-					zerosToAdd += '0';
-				};
-
-				rawValue = rawValue + zerosToAdd;
+			function allZeros(number) {
+				return number === '0';
 			}
 
-			// Cases 5, 6, 7, 8
-			if (!isWhole && numbersAfterDecimal.length > precision) {
-				// Case 5
-				if (parseInt(numbersAfterDecimal[precision]) <= 4) {
-					if (precision === 0) {
-						rawValue = numbersBeforeDecimal;
+			function appendMinusSign(value, isNegative) {
+				return isNegative ? '-' + value : value;
+			}
+
+			// API
+			function toFixed(value, precision) {
+				var value  								 = '' + value,
+						absValue 							 = value.replace(/[^0-9.]/g, ''),
+						isNegative        		 = value.indexOf('-') !== -1,
+				    isWhole           		 = value.indexOf('.') === -1;
+
+				// Return unaltered value if precision is undefined
+				if (arguments.length < 2) {
+					return appendMinusSign(absValue, isNegative);
+				}
+
+				// Whole numbers
+				if (isWhole) {
+					if (precision > 0) {
+						return appendMinusSign(absValue + '.' + generateZeros(precision), isNegative);
 					} else {
-						rawValue = numbersBeforeDecimal + '.' + numbersAfterDecimal.slice(0, precision);
+						return appendMinusSign(absValue, isNegative);
 					}
-				} else {
-					var numbersBeforeDecimalArray = numbersBeforeDecimal.split(/(?=[\s\S])/u),
-						numbersAfterDecimalArray  =	numbersAfterDecimal.split(/(?=[\s\S])/u);
+				}
 
-						numbersAfterDecimalArray.splice(precision);
-														
-					var fullValue = numbersBeforeDecimalArray.concat(numbersAfterDecimalArray).reverse();
+				// Numbers with decimals
+				if(!isWhole) {
+					var numsBeforeDecimal 		 = absValue.split('.')[0],
+							numsAfterDecimal  		 = absValue.split('.')[1],
+							numsAfterDecimalCount  = numsAfterDecimal.length,
+							numsBeforeDecimalArray = numsBeforeDecimal.split(/(?=[\s\S])/u),
+						  numsAfterDecimalArray  = numsAfterDecimal.split(/(?=[\s\S])/u);
 
-					var newValue = [];
+					// Return unaltered value if precision is already the same as initial value's precision
+					if (precision === numsAfterDecimalCount) {
+						return appendMinusSign(absValue, isNegative);
+					}
+					// Increase precision on number with decimals
+					if (precision > numsAfterDecimalCount) {
+						return appendMinusSign(absValue + generateZeros(precision - numsAfterDecimalCount), isNegative);
+					}
+					// Decrease precision on number with decimals
+					if (precision < numsAfterDecimalCount) {
+						// If value must be rounded down
+						if (parseInt(numsAfterDecimal[precision]) <= 4) {
+							(precision === 0) ? absValue = numsBeforeDecimal : absValue = numsBeforeDecimal + '.' + numsAfterDecimal.slice(0, precision);
+						} else {
+							// If value must be rounded up
+							numsAfterDecimalArray.splice(precision);
 
-					if (parseInt(fullValue[0]) < 9) {
-						fullValue.forEach(function(item, index, array) {
-							if (parseInt(item) < 9) {
-								if (index === 0) {
-									newValue.push("" + (parseInt(item) + 1));
-								} else {
-									newValue.push(item);
-								}
-							} else {
-								newValue.push(item);
-							}
-						});
-					} else {
+							var fullNumArray = numsBeforeDecimalArray.concat(numsAfterDecimalArray).reverse(),
+									newValue  = [];
 
-						fullValue.forEach(function(item, index, array) {
-							if (index === 0) {
-								newValue.push("0");
-							} else if (newValue[index - 1] === "0") {
-								if (newValue[index - 1] !== fullValue[index - 1]) {
-									if (item === "9") {
-										newValue.push("0");
+							//
+							if (parseInt(fullNumArray[0]) < 9) {
+								fullNumArray.forEach(function(item, index, array) {
+									if (parseInt(item) < 9) {
+										index === 0 ? newValue.push('' + (parseInt(item) + 1)) : newValue.push(item);
 									} else {
-										newValue.push("" + (parseInt(item) + 1));
+										newValue.push(item);
 									}
-								} else {
-									newValue.push(item);
-								}
+								});
 							} else {
-								newValue.push(item);
-							}	
-						});
-					}
+								fullNumArray.forEach(function(item, index, array) {
+									if (index === 0) {
+										newValue.push('0');
+									} else if (newValue[index - 1] === '0') {
+										if (newValue[index - 1] !== fullNumArray[index - 1]) {
+											item === '9' ? newValue.push('0') : newValue.push('' + (parseInt(item) + 1));
+										} else {
+											newValue.push(item);
+										}
+									} else {
+										newValue.push(item);
+									}
+								});
+							}
 
+							// Append a '1' to values comprised only of zeros
+							if (newValue.every(allZeros)) {
+								newValue.push('1');
+							}
 
-						function allZeros(number) {
-							return number === "0";
+							// Add decimal back if necessary
+							if (precision !== 0) {
+								newValue.splice(precision, 0, '.');
+							}
+
+							return appendMinusSign(newValue.reverse().join(''), isNegative);
 						}
+					}
+				}
 
-						if (newValue.every(allZeros)) {
-							newValue.push("1");
-						} 
-
-						if (precision !== 0) {
-							newValue.splice(precision, 0, '.');
-						}	
-
-						newValue = newValue.reverse().join("");
-
-						return isNegative ? "-" + newValue : newValue;
-				} 
-
-				// Case 6
-
+				// Return result adding minus sign as necessary
+				return appendMinusSign(absValue, isNegative);
 			}
 
-			// Return result adding minus sign as necessary
-			return isNegative ? "-" + rawValue : rawValue;
-		}
+			// Tests
 
-		// Tests
+			tests({
+		    	'It should return the number as a string': function() {
+		    		eq(typeof toFixed(52.75, 2), 'string');
+		    	},
 
-		tests({
+		    	'It should retain minus signs in negative numbers': function() {
+		    		eq(toFixed(-32.25), '-32.25');
+		    	},
 
-	    	'It should return the number as a string': function() {
-	    		eq(typeof toFixed(52.75, 2), 'string');
-	    	},
+		    	'It should return the value unchaged if precision is undefined': function() {
+		    		eq(toFixed(-32.25), '-32.25');
+		    	},
 
-	    	'It should retain minus signs in negative numbers': function() {
-	    		eq(toFixed(-32.25), '-32.25');
-	    	},
+					'It should return the value unchaged if precison is the same as inital values precision': function() {
+						eq(toFixed(32.25, 2), '32.25');
+					},
 
-	    	'It should return the value unchaged if precision is undefined or precison is the same as inital values precision': function() {
-	    		eq(toFixed(-32.25), '-32.25');
-	    		eq(toFixed(-32.25, 2), '-32.25');
-	    	},
+		    	'It should add a decimal and respective number of zeros if value is whole number and precision > 0': function() {
+		    		eq(toFixed(100, 2), '100.00');
+		    		eq(toFixed(-25439, 8), '-25439.00000000');
+		    		eq(toFixed(25439, 0), '25439');
+		    	},
 
-	    	'It should add a decimal and respective number of zeros if value is whole number and precision > 0': function() {
-	    		eq(toFixed(100, 2), '100.00');
-	    		eq(toFixed(-25439, 8), '-25439.00000000');
-	    		eq(toFixed(25439, 0), '25439');
-	    	},
+		    	'It should add respective number of zeros if value has a decimal and precision > intital values precision': function() {
+		    		eq(toFixed(100.0, 2), '100.00');
+		    		eq(toFixed(-25439.1, 8), '-25439.10000000');
+		    		eq(toFixed(25439.631, 4), '25439.6310');
+		    	},
 
-	    	'It should add a decimal and respective number of zeros if value is whole number and precision > 0': function() {
-	    		eq(toFixed(100, 2), '100.00');
-	    		eq(toFixed(-25439, 8), '-25439.00000000');
-	    		eq(toFixed(25439, 0), '25439');
-	    	}
+					'It should round down if necessary and apply appropriate precision': function() {
+						eq(toFixed(19.454, 2), '19.45');
+					},
 
-		});
+					'It should round up if necessary and apply appropriate precision': function() {
+						eq(toFixed(19.455, 2), '19.46');
+						eq(toFixed(19.495, 2), '19.50');
+						eq(toFixed(999.999, 2), '1000.00');
+						eq(toFixed(900999.99900000, 0), '901000');
+					},
 
-		99.990
-
+					'It should return "0" without a minus sign if an initial negative value results in zero': function() {
+						eq(toFixed(-0.01, 0), '0');
+						eq(toFixed(-0.01, 1), '0.0');
+					}
+			});
 		</script>
 	</head>
 	<body>
-		<h2>Possible cases listed from easiest to hardest:</h2>
-		<p style="font-size: 0.9em;">/****<br>NOTE: Words preceeded by '$' denote function parameters in code<br>****/</p>
-		<ol class="main">
-			<li>
-				<p><strong>$precision</strong> is not defined:</p>
-				<ul>
-					<li><strong>Solution:</strong> Return <strong>$value</strong> unchanged.</li>
-					<li><strong>Implementation:</strong></li>
-				</ul>
-			</li>
-
-			<li>
-				<p><strong>$precision</strong> is exactly equal to intital <strong>$value</strong> precision:</p>
-				<ul>
-					<li><strong>Solution:</strong> Return <strong>$value</strong> unchanged.</li>
-					<li><strong>Implementation:</strong></li>
-				</ul>
-			</li>	
-
-			<li>
-				<p><strong>$value</strong> is already whole:</p>
-				<ul>
-					<li><strong>Solution:</strong> add decimal and <strong>$precision</strong> number of zeros to end of <strong>$value</strong></li>
-					<li><strong>Implementation:</strong></li>
-						<ul>
-							<li>Build a string of zeros by looping through <strong>$precision</strong> number of times, adding a zero each loop.</li>
-							<li>Attach a '.' and the string of zeros to end of <strong>$value</strong>.</li>
-						</ul>
-				</ul>
-			</li>	
-
-			<li>
-				<p><strong>$value</strong> is not whole, but <strong>$precision</strong> is greater than the number of numbers to the right of decimal (i.e. actual precision):</p>
-				<ul>
-					<li><strong>Solution:</strong> Add (<strong>$precision</strong> - actual precision) number of zeros to the end of <strong>$value</strong>.</li>
-					<li><strong>Implementation:</strong></li>
-				</ul>
-			</li>
-
-			<li>
-				<p><strong>$precision</strong> is less than the number of numbers to the right of decimal (i.e. intital <strong>$value</strong> precision), and the number that is (<strong>$precision</strong> + 1) spaces to the right of the decimal is <= 4:</p>
-				<ul>
-					<li><strong>Solution:</strong> Simply remove all numbers that are (<strong>$precision</strong> + 1 or more) spaces to the right of the decimal.</li>
-					<li><strong>Implementation:</strong></li>
-				</ul>
-			</li>
-	
-			<li>
-				<p><strong>$value</strong> must be rounded up to achieve desired precision. The number that is <strong>$precision</strong> number of spaces to the right of the decimal is 9, and the number that is (<strong>$precision</strong> + 1) spaces to the right of the decimal is >= 5:</p>	
-				<ul>
-					<li><strong>Solution:</strong> In addition to applying the correct precision, the 9 becomes a zero and the number that is (<strong>$precision</strong> - 1) spaces to the right of the decimal is incremented by 1.</li>
-					<li><strong>Implementation:</strong></li>
-				</ul>
-			</li>
-
-			<li>
-				<p>The same scenario as #6, but the number at the <strong>$precision</strong> - 1 space is also a 9 (or the number at number at the <strong>$precision</strong> - 1 space and number at the <strong>$precision</strong> - 2 space are 9's, and so forth and so on).</p>	
-				<ul>
-					<li><strong>Solution:</strong> In addition to applying the correct precision, the 9 becomes a zero and the number that is (<strong>$precision</strong> - 1) spaces to the right of the decimal is incremented by 1.</li>
-					<li><strong>Implementation:</strong></li>
-				</ul>
-			</li>
-			<li>
-				<p>The same scenario as #7, except going from right to left through the number, everything is a 9 including the very first number.</p>	
-				<ul>
-					<li><strong>Solution:</strong> The solution to #5 applies here, but in addition a 1 will be added to the front of the number. (i.e. 99.999 with a <strong>$precision</strong> of 2 yields 100.00).</li>
-					<li><strong>Implementation:</strong></li>
-				</ul>
-			</li>
-		</ol>
-		<div style="border: 1px solid #666; padding: 20px; width: 45%;">
-			<h2 style="margin: 0;">Scratch Pad</h2>
-			<p>Ex: 76</p>
-		</div>
 	</body>
-	<style type="text/css">
-		body {
-			font-family: 'Open Sans';
-		}
-		ul {
-			margin-bottom: 40px;
-		}
-
-		li {
-			margin-bottom: 10px;
-		}
-
-		p {
-			margin-top: 0;
-		}
-
-		h2 {
-			margin-bottom: 0;
-		}
-
-		strong {
-			font-weight: 900;
-			font-size: 1.1em;
-		}
-
-		ol.main {
-			max-width: 45%;
-		}
-
-		ol.main > li p {
-			font-weight: 700;
-			margin-bottom: 20px;
-		} 
-	</style>
 </html>
