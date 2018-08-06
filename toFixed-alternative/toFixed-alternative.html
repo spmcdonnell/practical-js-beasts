@@ -146,9 +146,9 @@
 		    		eq(toFixed(-32.25), '-32.25');
 		    	},
 
-					'It should return the value unchaged if precision is the same as inital values precision': function() {
-						eq(toFixed(32.25, 2), '32.25');
-					},
+			'It should return the value unchaged if precision is the same as inital values precision': function() {
+				eq(toFixed(32.25, 2), '32.25');
+			},
 
 		    	'It should add a decimal and respective number of zeros if value is whole number and precision > 0': function() {
 		    		eq(toFixed(100, 2), '100.00');
@@ -162,22 +162,22 @@
 		    		eq(toFixed(25439.631, 4), '25439.6310');
 		    	},
 
-					'It should round down if necessary and apply appropriate precision': function() {
-						eq(toFixed(19.454, 2), '19.45');
-					},
+			'It should round down if necessary and apply appropriate precision': function() {
+				eq(toFixed(19.454, 2), '19.45');
+			},
 
-					'It should round up if necessary and apply appropriate precision': function() {
-						eq(toFixed(19.455, 2), '19.46');
-						eq(toFixed(19.495, 2), '19.50');
-						eq(toFixed(999.999, 2), '1000.00');
-						eq(toFixed(900999.99900000, 0), '901000');
-					},
+			'It should round up if necessary and apply appropriate precision': function() {
+				eq(toFixed(19.455, 2), '19.46');
+				eq(toFixed(19.495, 2), '19.50');
+				eq(toFixed(999.999, 2), '1000.00');
+				eq(toFixed(900999.99900000, 0), '901000');
+			},
 
-					'It should return "0" without a minus sign if an initial negative value results in zero': function() {
-						eq(toFixed(-0.01, 0), '0');
-						eq(toFixed(-0.01, 1), '0.0');
-						eq(toFixed(-0.0, 10), '0.0000000000');
-					}
+			'It should return "0" without a minus sign if an initial negative value results in zero': function() {
+				eq(toFixed(-0.01, 0), '0');
+				eq(toFixed(-0.01, 1), '0.0');
+				eq(toFixed(-0.0, 10), '0.0000000000');
+			}
 			});
 		</script>
 	</head>
