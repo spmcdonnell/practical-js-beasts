@@ -5,118 +5,132 @@
 		<link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700,800" rel="stylesheet">
 		<script src="tinytest.js"></script>
 		<script>
-			// Helpers
-			function generateZeros(thing) {
-				var zerosToAdd = '';
+			(function(global) {
+				/** Simple helpers */
+				function generateZeros(count) {
+					var zerosToAdd = '';
 
-				for (var i = 0; i < thing; i++) {
-					zerosToAdd += '0';
-				};
+					for (var i = 0; i < count; i++) {
+						zerosToAdd += '0';
+					};
 
-				return zerosToAdd;
-			}
-
-			function allZeros(number) {
-				return number === '0';
-			}
-
-			function appendMinusSign(value, isNegative) {
-				return isNegative ? '-' + value : value;
-			}
-
-			// API
-			function toFixed(value, precision) {
-				var value = '' + value,
-				absValue = value.replace(/[^0-9.]/g, ''),
-				isNegative = value.indexOf('-') !== -1,
-		    isWhole = value.indexOf('.') === -1;
-
-				// Return unaltered value if precision is undefined
-				if (arguments.length < 2) {
-					return appendMinusSign(absValue, isNegative);
+					return zerosToAdd;
 				}
 
-				// Whole numbers
-				if (isWhole) {
-					if (precision > 0) {
-						return appendMinusSign(absValue + '.' + generateZeros(precision), isNegative);
-					} else {
-						return appendMinusSign(absValue, isNegative);
-					}
+				function allZeros(number) {
+					return number === '0';
 				}
 
-				// Numbers with decimals
-				if(!isWhole) {
-					var numsBeforeDecimal = absValue.split('.')[0],
-					numsAfterDecimal = absValue.split('.')[1],
-					numsAfterDecimalCount = numsAfterDecimal.length,
-					numsBeforeDecimalArray = numsBeforeDecimal.split(/(?=[\s\S])/u),
-				  numsAfterDecimalArray = numsAfterDecimal.split(/(?=[\s\S])/u);
+				function appendMinusSign(value, isNegative) {
+					return isNegative ? '-' + value : value;
+				}
 
-					// Return unaltered value if precision is already the same as initial value's precision
-					if (precision === numsAfterDecimalCount) {
+
+				/**
+				 * API — Replicates Number.prototype.toFixed() functionality
+				 * using only string manipulation (no Math.round, etc), for some masochistic reason.
+				 * Fixes flaws in native toFixed behavior (eg. (0.615).toFixed(2) === "0.61")).
+				 *
+				 * Param 1 (string or number) — number to be processed
+				 * Param 2 (number) — desired precision, i.e. count of numbers after decimal point
+				 */
+				function toFixed(value, precision) {
+					var value = '' + value,
+					absValue = value.replace(/[^0-9.]/g, ''),
+					isNegative = value.indexOf('-') !== -1,
+			    isWhole = value.indexOf('.') === -1;
+
+					/** Return unaltered value if precision is undefined */
+					if (arguments.length < 2) {
 						return appendMinusSign(absValue, isNegative);
 					}
-					// Increase precision on number with decimals
-					if (precision > numsAfterDecimalCount) {
-						return appendMinusSign(absValue + generateZeros(precision - numsAfterDecimalCount), isNegative);
-					}
-					// Decrease precision on number with decimals
-					if (precision < numsAfterDecimalCount) {
-						// If value must be rounded down
-						if (parseInt(numsAfterDecimal[precision]) <= 4) {
-							(precision === 0) ? absValue = numsBeforeDecimal : absValue = numsBeforeDecimal + '.' + numsAfterDecimal.slice(0, precision);
+
+					/** Handle whole numbers */
+					if (isWhole) {
+						if (precision > 0) {
+							return appendMinusSign(absValue + '.' + generateZeros(precision), isNegative);
 						} else {
-							// If value must be rounded up
-							numsAfterDecimalArray.splice(precision);
-
-							var fullNumArray = numsBeforeDecimalArray.concat(numsAfterDecimalArray).reverse(),
-									newValue  = [];
-
-							//
-							if (parseInt(fullNumArray[0]) < 9) {
-								fullNumArray.forEach(function(item, index, array) {
-									if (parseInt(item) < 9) {
-										index === 0 ? newValue.push('' + (parseInt(item) + 1)) : newValue.push(item);
-									} else {
-										newValue.push(item);
-									}
-								});
-							} else {
-								fullNumArray.forEach(function(item, index, array) {
-									if (index === 0) {
-										newValue.push('0');
-									} else if (newValue[index - 1] === '0') {
-										if (newValue[index - 1] !== fullNumArray[index - 1]) {
-											item === '9' ? newValue.push('0') : newValue.push('' + (parseInt(item) + 1));
-										} else {
-											newValue.push(item);
-										}
-									} else {
-										newValue.push(item);
-									}
-								});
-							}
-
-							// Append a '1' to values comprised only of zeros
-							if (newValue.every(allZeros)) {
-								newValue.push('1');
-							}
-
-							// Add decimal back if necessary
-							if (precision !== 0) {
-								newValue.splice(precision, 0, '.');
-							}
-
-							return appendMinusSign(newValue.reverse().join(''), isNegative);
+							return appendMinusSign(absValue, isNegative);
 						}
 					}
+
+					/** Handle Numbers with decimal */
+					if(!isWhole) {
+						var numsBeforeDecimal = absValue.split('.')[0],
+						numsAfterDecimal = absValue.split('.')[1],
+						numsAfterDecimalCount = numsAfterDecimal.length,
+						numsBeforeDecimalArray = numsBeforeDecimal.split(/(?=[\s\S])/u),
+					  numsAfterDecimalArray = numsAfterDecimal.split(/(?=[\s\S])/u);
+
+						/** Return unaltered value if precision is already the same as initial value's precision*/
+						if (precision === numsAfterDecimalCount) {
+							return appendMinusSign(absValue, isNegative);
+						}
+						/** Increase precision on number with decimals */
+						if (precision > numsAfterDecimalCount) {
+							return appendMinusSign(absValue + generateZeros(precision - numsAfterDecimalCount), isNegative);
+						}
+						/** Decrease precision on number with decimals */
+						if (precision < numsAfterDecimalCount) {
+							/** If value must be rounded down */
+							if (parseInt(numsAfterDecimal[precision]) <= 4) {
+								(precision === 0) ?
+									absValue = numsBeforeDecimal :
+									absValue = numsBeforeDecimal + '.' + numsAfterDecimal.slice(0, precision);
+							} else {
+								/** If value must be rounded up */
+								numsAfterDecimalArray.splice(precision);
+
+								var fullNumArray = numsBeforeDecimalArray.concat(numsAfterDecimalArray).reverse(),
+										roundedValue = [];
+
+								if (parseInt(fullNumArray[0]) < 9) {
+									fullNumArray.forEach(function(item, index, array) {
+										if (parseInt(item) < 9) {
+											index === 0 ? roundedValue.push('' + (parseInt(item) + 1)) : roundedValue.push(item);
+										} else {
+											roundedValue.push(item);
+										}
+									});
+								} else {
+									fullNumArray.forEach(function(item, index, array) {
+										if (index === 0) {
+											roundedValue.push('0');
+										} else if (roundedValue[index - 1] === '0') {
+											if (roundedValue[index - 1] !== fullNumArray[index - 1]) {
+												item === '9' ? roundedValue.push('0') : roundedValue.push('' + (parseInt(item) + 1));
+											} else {
+												roundedValue.push(item);
+											}
+										} else {
+											roundedValue.push(item);
+										}
+									});
+								}
+
+								/** Append a '1' to values comprised only of zeros */
+								if (roundedValue.every(allZeros)) {
+									roundedValue.push('1');
+								}
+
+								/** Add decimal back if necessary */
+								if (precision !== 0) {
+									roundedValue.splice(precision, 0, '.');
+								}
+
+								roundedValue = roundedValue.reverse().join('');
+
+								return parseFloat(roundedValue) === 0 ? absValue : appendMinusSign(roundedValue, isNegative);
+							}
+						}
+					}
+
+					/** Return result adding minus sign as necessary */
+					return parseFloat(absValue) === 0 ? absValue : appendMinusSign(absValue, isNegative);
 				}
 
-				// Return result adding minus sign as necessary
-				return appendMinusSign(absValue, isNegative);
-			}
-
+				global.toFixed = toFixed;
+		  })(this);
 			// Tests
 
 			tests({
@@ -132,7 +146,7 @@
 		    		eq(toFixed(-32.25), '-32.25');
 		    	},
 
-					'It should return the value unchaged if precison is the same as inital values precision': function() {
+					'It should return the value unchaged if precision is the same as inital values precision': function() {
 						eq(toFixed(32.25, 2), '32.25');
 					},
 
@@ -162,6 +176,7 @@
 					'It should return "0" without a minus sign if an initial negative value results in zero': function() {
 						eq(toFixed(-0.01, 0), '0');
 						eq(toFixed(-0.01, 1), '0.0');
+						eq(toFixed(-0.0, 10), '0.0000000000');
 					}
 			});
 		</script>
